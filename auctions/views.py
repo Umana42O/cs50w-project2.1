@@ -10,7 +10,7 @@ from .models import *
 
 
 def index(request):
-    auctions = Auctions.objects.all()
+    auctions = Auctions.objects.filter(active = 1)
     context = {
         'auctions': auctions,
     }
@@ -88,12 +88,14 @@ def listing_details(request, id):
     listing = Auctions.objects.get(pk=id)
     comments = Comment.objects.filter(auctions_id=id)
     user = request.user
+    is_owner = Auctions.objects.filter(owner=request.user)
     BidForm = UpdatePriceForm()
     context = {
         'listing': listing,
         'user': user,
         'comments': comments,
-        'form': BidForm
+        'form': BidForm,
+        'is_owner': is_owner,
     }
     print(context)
     return render(request, "auctions/details.html", context)
@@ -143,12 +145,15 @@ def update_price(request, auction_id):
     return redirect('listing_details', id=auction_id)
 
 def closeAuction(request, id):
-    listingData = Auctions.objects.get(pk=id)
-    listingData.isActive = False
+    #listingData = Auctions.objects.get(pk=id)
+    listingData = Auctions.objects.filter(bid__user=id)
+    print(listingData)
+    listingData.active = False
+    owner = Bid.objects.filter()
     listingData.save()
-    isOwner = request.user.username == listingData.owner.username 
-    isListingInWatchlist = request.user in listingData.watchlist.all()
-    allComments = Comment.objects.filter(auctions=listingData)
+    # isOwner = request.user.username == listingData.owner.username 
+    # isListingInWatchlist = request.user in listingData.watchlist.all()
+    # allComments = Comment.objects.filter(auctions=listingData)
     return render(request, "auctions/details.html", {
         "listing": listingData,
         "isListingInWatchlist": isListingInWatchlist,
